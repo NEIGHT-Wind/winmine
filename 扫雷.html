@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>扫雷</title>
+	<link rel="stylesheet" type="text/css" href="扫雷.css">	
+</head>
+<body>
+<div class="game-body">
+		<div class="game-title">GAME&nbsp;&nbsp;&nbsp;&nbsp;扫雷</div>
+		<div class="game-nav">
+			<ul>
+				<li style="background-color: orange;">简单</li>
+				<li>中级</li>
+				<li>困难</li>
+				<li class="time">计时器：&nbsp;&nbsp;&nbsp;&nbsp;
+					<input value="0"></input>
+					分
+					<input value="0"></input>
+					秒
+				</li>
+			</ul>
+			<div class="game-snav">
+				<div class="boom-num">
+					剩余雷数
+					<input value="10"></input>
+				</div>
+				<div class="newgame">重新开始</div>
+			</div>
+		</div>
+		<div class="game-main">
+			<div class="game-mainpage">
+				<div class="easy">
+					<ul class="chessboard"></ul>
+				</div>
+				<div class="usual">
+					<ul class="chessboard"></ul>
+				</div>
+				<div class="hard">
+					<ul class="chessboard"></ul>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script src="tool.js"></script>
+	<script type="text/javascript">
+		var oUl = document.getElementsByTagName('ul'),
+			oGNli = oUl[0].children,
+			oGmainpage = document.getElementsByClassName('game-mainpage')[0],
+			oInput = document.getElementsByTagName('input'),
+			oNewgame = document.getElementsByClassName('newgame')[0],
+			timer,
+			boolen_nav = true;
+// 初始化功能
+		startWork();
+		function startWork() {
+			for (var i = 0; i < 3; i ++) {
+				oGNli[i].onclick = (function (i) {
+					return function () {
+						if (boolen_nav) {
+							for (var j = 0; j < 3; j ++) {
+								oGNli[j].style.backgroundColor = '#FFB';
+							}
+							oGNli[i].style.backgroundColor = 'orange';
+							if (i == 0) {
+								oInput[2].value = '10';
+							}else if (i == 1) {
+								oInput[2].value = '40';
+							}else if (i == 2) {
+								oInput[2].value = '99';
+							}
+							move(oGmainpage,{top: -450 * i},function () {});
+						}
+					}
+				})(i);
+			}
+		}
+		oNewgame.onclick = function() {
+			oNewgame.style.fontWeight = '700';
+			setTimeout(function() {
+				oNewgame.style.fontWeight = null;
+			},2000);
+			clearInterval(timer);
+			timer = null;
+			oInput[0].value = 0;
+			oInput[1].value = 0;
+			if (oGNli[0].style.backgroundColor == 'orange') {
+				oInput[2].value = '10';
+			}else if (oGNli[1].style.backgroundColor == 'orange') {
+				oInput[2].value = '40';
+			}else if (oGNli[2].style.backgroundColor == 'orange') {
+				oInput[2].value = '99';
+			}
+			boolen_nav = true;
+			text();
+		}
+		document.oncontextmenu = function () {
+			return false;
+		}
+// 棋盘、标记雷旁边数字
+		var _easy, _usual, _hard,
+			objli_e, mine_e, objdiv_e,
+			objli_u, mine_u, objdiv_u,
+			objli_h, mine_h, objdiv_h;
+		text();
+	function text() {
+		// 棋盘函数执行
+		_easy = chessboard(1, 9, 9, 10);
+		_usual = chessboard(2, 16, 16, 40);
+		_hard = chessboard(3, 16, 30, 99);
+		objli_e = _easy[0];
+		mine_e = _easy[1];
+		objdiv_e = _easy[2];
+		objli_u = _usual[0];
+		mine_u = _usual[1];	
+		objdiv_u = _usual[2];
+		objli_h = _hard[0];
+		mine_h = _hard[1];
+		objdiv_h = _hard[2];
+		// 雷周围标记数字函数执行
+		aroundMineNum(mine_e, objli_e);
+		aroundMineNum(mine_u, objli_u);
+		aroundMineNum(mine_h, objli_h);
+		// 事件绑定
+		oUl[1].addEventListener('mouseup', eventMouseup_e, false);
+		oUl[2].addEventListener('mouseup', eventMouseup_u, false);
+		oUl[3].addEventListener('mouseup', eventMouseup_h, false);
+	}
+		// 棋盘生成函数
+		function chessboard(chessboardNum, height, width, mineNum) {
+			var objli = {},
+				mine = {},
+				objdiv = {},
+				result = [objli,mine,objdiv],
+				html = '';
+			for(var i = 0; i < height; i++){
+				for(var j = 0; j < width; j++){
+					html += '\
+					<li>\
+						<div></div>\
+					</li>';
+					objli[i + ',' + j] = null;
+				 	objdiv[i + ',' + j] = null;
+				}
+			}
+			oUl[chessboardNum].innerHTML = html;
+			var oli = oUl[chessboardNum].children,
+				odiv = [],
+				index = 0,
+				indexdiv = 0;
+			for(var prop in oli) {
+				odiv[indexdiv] = oli[prop].children;
+				indexdiv ++;
+			}
+			for(var prop1 in objli) {
+				objli[prop1] = oli[index];
+				objdiv[prop1] = odiv[index];
+				index ++;
+			}
+			for(var i = 0; i < mineNum; i ++){
+				index = Math.floor(Math.random() * height) + ',' + Math.floor(Math.random() * width);
+				objli[index].style.backgroundImage = 'url("mine.jpg")';
+				objli[index].style.backgroundSize = '100% 100%';
+				if (!mine[index]) {
+					mine[index] = objli[index];
+				}else{
+					i --;
+				}
+			}
+		 	return result;
+		}
+		// 雷周围标记数字函数
+		function aroundMineNum (mine, objli) {
+			for(var prop in mine) {
+				var newindex = findAround(prop);
+				for(var i = 0; i < 8; i ++) {
+					if (objli[newindex[i]] && objli[newindex[i]] !== mine[newindex[i]]) {
+						objli[newindex[i]].innerHTML ='<div></div>' + (Number(objli[newindex[i]].innerText) + 1);
+					}
+				}
+			}
+		}
+		// 周围位置函数
+		function findAround(attr) {
+			var newindex = [],
+				arr = attr.split(','),
+				x = Number(arr[0]), 
+				y = Number(arr[1]);
+				newindex[0] = (x - 1) + ',' + (y - 1);
+				newindex[1] = (x - 1) + ',' + y;
+				newindex[2] = (x - 1) + ',' + (y + 1);
+				newindex[3] = x + ',' + (y + 1);
+				newindex[4] = (x + 1) + ',' + (y + 1);
+				newindex[5] = (x + 1) + ',' + y;
+				newindex[6] = (x + 1) + ',' + (y - 1);
+				newindex[7] = x + ',' + (y - 1);
+			return newindex;
+		}
+		// 点击事件函数
+		function eventMouseup_e(e) {
+			var event = e || window.event;
+			_click(objli_e, mine_e, objdiv_e, event, oUl[1], 81, eventMouseup_e);
+		}
+		function eventMouseup_u(e) {
+			var event = e || window.event;
+			_click(objli_u, mine_u, objdiv_u, event, oUl[2], 256, eventMouseup_u);
+		}
+		function eventMouseup_h(e) {
+			var event = e || window.event;
+			_click(objli_h, mine_h, objdiv_h, event, oUl[3], 480, eventMouseup_h);
+		}
+		function _click(objli, mine, objdiv, event, oUl, objdivlength, eventMouseup) {
+			var Target = event.target,
+				Parent = Target.parentNode,
+				Prop = '',
+				count = 0;
+			if (oUl == Target) {
+				return false;
+			}
+			for(var prop in objli) {
+				if (objli[prop] == Target) {
+					return false;
+				}else if (objli[prop] == Parent) {
+					Prop = prop;
+					break;
+				}
+			}
+			boolen_nav = false;
+			if (!timer) {
+				timer = setInterval(function() {
+					if (oInput[1].value == 60) {
+						oInput[1].value = 0;
+						oInput[0].value = Number(oInput[0].value) + 1;
+					}
+					oInput[1].value = Number(oInput[1].value) + 1;
+				},1000);
+			}
+			if (event.button == 0) {
+				if (objdiv[Prop].flagover == 'flagover') {
+					return false;
+				}
+				if (Parent.style.backgroundImage) {
+					for(var prop1 in mine) {
+						objdiv[prop1][0].style.opacity = '0';
+					}
+					clearInterval(timer);
+					timer = null;
+					alert('游戏结束');
+					oUl.removeEventListener('mouseup', eventMouseup, false);
+				}else if (Parent.innerText) {
+					Target.style.opacity = '0';
+					objdiv[Prop].name = 'open';
+				}else if (!Parent.innerText) {
+					Target.style.opacity = '0';
+					objdiv[Prop].name = 'open';
+					diffusion(Prop, objli, objdiv);
+				}
+			}else if (event.button == 2) {
+				if (Target.style.backgroundImage) {
+					Target.style.backgroundImage = '';
+					Target.style.backgroundSize = '';
+					objdiv[Prop].flagover = null;
+					oInput[2].value = Number(oInput[2].value) + 1;
+				}else if (!Target.style.backgroundImage && !objdiv[Prop].name) {
+					if (oInput[2].value == 0) {
+						return false;
+					}else {
+						Target.style.backgroundImage = 'url("flag.jpg")';
+						Target.style.backgroundSize = '100% 100%';
+						Target.style.borderWidth = '0px';
+						oInput[2].value = oInput[2].value - 1;
+						objdiv[Prop].flagover = 'flagover';
+					}
+				}
+			}
+			if (oInput[2].value == 0) {
+				for(var prop3 in objdiv) {
+					if(objdiv[prop3].name || objdiv[prop3].flagover){
+						count ++;
+					}
+				}
+				if (count == objdivlength) {
+					alert('恭喜，你赢了！\n所用时间为：' + oInput[0].value + '分' + oInput[1].value + '秒');
+					clearInterval(timer);
+					timer = null;
+					oUl.removeEventListener('mouseup', eventMouseup, false);
+				}
+			}
+		}
+		// 扩散函数
+		function diffusion(Prop, objli, objdiv) {
+			var newindex = findAround(Prop); 
+			for(var i = 0; i < 8; i ++) {
+				if (objli[newindex[i]] && objli[newindex[i]].innerText) {
+					objdiv[newindex[i]][0].style.opacity = '0';
+					objdiv[newindex[i]].name = 'open';
+				}else if (objli[newindex[i]] && !objli[newindex[i]].innerText && !objli[newindex[i]].name) {
+					objli[newindex[i]].name = 'clickover';
+					objdiv[newindex[i]][0].style.opacity = '0';
+					objdiv[newindex[i]].name = 'open';
+					diffusion(newindex[i], objli, objdiv);
+				}
+			}
+			for(var prop in objdiv) {
+				if (objdiv[prop].flagover) {
+					objdiv[prop][0].style.opacity = '1';
+					objdiv[prop].name = null;
+				}
+			}
+		}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	</script>
+</body>
+</html>
