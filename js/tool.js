@@ -149,7 +149,7 @@
 	    if (elem.removeEventListener) {
 	        elem.removeEventListener(type, handler, false);
 	    }else if (elem.detachEvent) {
-	        elem.detachEvent('on' + type,handler);
+	        elem.detachEvent('on' + type.handler);
 	    }else {
 	        elem['on' + type] = false;
 	    }
