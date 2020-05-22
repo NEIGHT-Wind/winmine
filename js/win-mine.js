@@ -134,7 +134,9 @@ Winmine.prototype.click = function () {
 				for (var prop in that.objDiv) {
 					that.objDiv[prop].style.display = 'none';
 				}
-				alert('游戏结束');
+				setTimeout(function () {
+					alert('游戏结束');
+				}, 100)
 				return false;
 			} else if (!parent.innerText) {
 				parent.name = 'open';
@@ -177,7 +179,9 @@ Winmine.prototype.click = function () {
 				for (var prop in that.objDiv) {
 					that.objDiv[prop].style.display = 'none';
 				}
-				alert('congratulation！\ntime：' + oInput[0].value + 'minute' + oInput[1].value + 'second');
+				setTimeout(function () {
+					alert('congratulation！\ntime：' + oInput[0].value + 'minute' + oInput[1].value + 'second');
+				}, 100);
 			}
 		}
 	}, false);
